@@ -25,3 +25,6 @@ data/*_backup.db
 *.tmp
 *.log
 .DS_Store
+
+data/cold_chain_test.db
+data/cold_chain_detector_test.db

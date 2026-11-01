@@ -1,6 +1,8 @@
 
+
 import sqlite3
 import heapq
+import random
 from pathlib import Path
 from datetime import datetime, timedelta
 
@@ -8,6 +10,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 DATABASE_FILE = BASE_DIR / "data" / "cold_chain.db"
 
 CREATED_AT = "2026-10-01T00:00:00"
+RANDOM_SEED = 20261022
 
 
 def parse_datetime(value, field_name):
@@ -121,8 +124,6 @@ def generate_assignments(connection):
         if available_at > departure_dt:
             conflicts += 1
 
-        # An invalid actual delivery timestamp must not create
-        # an assignment release before its departure.
         release_dt = max(
             actual_dt or expected_dt,
             departure_dt
@@ -154,6 +155,151 @@ def generate_assignments(connection):
 
     print("Shipment-container assignments:", len(assignments))
     print("Container scheduling conflicts:", conflicts)
+
+
+# ==========================================
+# ASSIGNMENT-BASED SENSOR READINGS
+# ==========================================
+
+def generate_assignment_readings(connection):
+    """Generate deterministic sensor readings for each shipment."""
+
+    rng = random.Random(RANDOM_SEED)
+
+    assignments = connection.execute("""
+        SELECT
+            a.assignment_id,
+            s.departure_time,
+            s.expected_delivery_time,
+            s.actual_delivery_time,
+            p.min_temperature,
+            p.max_temperature,
+            p.min_humidity,
+            p.max_humidity,
+            sn.sensor_id
+        FROM ShipmentContainer a
+        JOIN Shipment s
+            ON s.shipment_id = a.shipment_id
+        JOIN Product p
+            ON p.product_id = s.product_id
+        JOIN Sensor sn
+            ON sn.container_id = a.container_id
+        ORDER BY a.assigned_at, a.assignment_id
+    """).fetchall()
+
+    if not assignments:
+        raise RuntimeError(
+            "No assignments found. Generate assignments first."
+        )
+
+    sql = """
+        INSERT OR IGNORE INTO SensorReading (
+            reading_id, sensor_id, recorded_at,
+            temperature, humidity, battery_level,
+            signal_strength, data_quality
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """
+
+    batch = []
+    total = 0
+
+    for row in assignments:
+        (
+            assignment_id,
+            departure,
+            expected,
+            actual,
+            min_t,
+            max_t,
+            min_h,
+            max_h,
+            sensor_id
+        ) = row
+
+        start = parse_datetime(
+            departure, f"{assignment_id}.departure_time"
+        )
+
+        expected_end = parse_datetime(
+            expected, f"{assignment_id}.expected_delivery_time"
+        )
+
+        actual_end = (
+            parse_datetime(
+                actual, f"{assignment_id}.actual_delivery_time"
+            )
+            if actual else None
+        )
+
+        # Invalid early delivery must not shorten the trip.
+        end = (
+            actual_end
+            if actual_end and actual_end >= start
+            else expected_end
+        )
+
+        if end < start:
+            raise ValueError(
+                f"Invalid shipment window: {assignment_id}"
+            )
+
+        temp_mid = (min_t + max_t) / 2
+        humidity_mid = (min_h + max_h) / 2
+
+        temp_sd = max((max_t - min_t) / 8, 0.05)
+        humidity_sd = max((max_h - min_h) / 8, 0.1)
+
+        current = start
+
+        while current <= end:
+
+            temperature = round(
+                max(
+                    min_t,
+                    min(max_t, rng.gauss(temp_mid, temp_sd))
+                ),
+                2
+            )
+
+            humidity = round(
+                max(
+                    min_h,
+                    min(max_h, rng.gauss(humidity_mid, humidity_sd))
+                ),
+                2
+            )
+
+            battery = round(rng.uniform(70, 100), 2)
+            signal = round(rng.uniform(60, 100), 2)
+
+            reading_id = (
+                f"RDG-{sensor_id}-"
+                f"{current.strftime('%Y%m%d%H%M')}"
+            )
+
+            batch.append((
+                reading_id,
+                sensor_id,
+                current.isoformat(),
+                temperature,
+                humidity,
+                battery,
+                signal,
+                "GOOD"
+            ))
+
+            if len(batch) >= 10000:
+                connection.executemany(sql, batch)
+                total += len(batch)
+                batch.clear()
+
+            current += timedelta(minutes=5)
+
+    if batch:
+        connection.executemany(sql, batch)
+        total += len(batch)
+
+    print("Assignment-based sensor readings:", total)
 
 
 def generate_route_stops(connection):
@@ -193,7 +339,6 @@ def generate_route_stops(connection):
 
         journey_end = actual_dt or expected_dt
 
-        # Keep generated intermediate stops within the journey.
         midpoint = departure_dt + (
             max(journey_end, departure_dt) - departure_dt
         ) / 2
@@ -291,6 +436,7 @@ def verify_operations(connection):
     tables = [
         "ThresholdPolicy",
         "ShipmentContainer",
+        "SensorReading",
         "RouteStop",
         "CustodyEvent"
     ]
@@ -328,6 +474,7 @@ def main():
     try:
         generate_threshold_policies(connection)
         generate_assignments(connection)
+        generate_assignment_readings(connection)
         generate_route_stops(connection)
         generate_custody_events(connection)
 

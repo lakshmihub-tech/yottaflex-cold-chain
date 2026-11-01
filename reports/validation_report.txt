@@ -1,0 +1,34 @@
+YOTTAFLEX COLD CHAIN - VALIDATION REPORT
+=============================================
+Generated: 2026-11-01 11:33:08.473549
+
+DATABASE INTEGRITY:
+ok
+
+FOREIGN KEY CHECK:
+Violations: 0
+
+TABLE RECORD COUNTS:
+Container: 300
+CorrectiveAction: 3
+CustodyEvent: 1774
+DataQualityIssue: 5
+Excursion: 4
+Product: 5
+RouteStop: 3000
+Sensor: 300
+SensorReading: 294623
+Shipment: 1000
+ShipmentContainer: 1000
+ThresholdPolicy: 5
+
+NEGATIVE SCENARIO DETECTION:
+('NEG-001', 'PHYSICALLY_IMPOSSIBLE', 1, 1, 'Physically impossible sensor value detected.')
+('NEG-002', 'MISSING_INTERVAL', 1, 1, 'Missing sensor interval detected: 10 minutes.')
+('NEG-003', 'DELIVERY_BEFORE_DEPARTURE', 1, 1, 'Delivery occurred before shipment departure.')
+('NEG-004', 'WRONG_PRODUCT_THRESHOLD', 1, 1, 'Applied policy belongs to a different product.')
+('NEG-005', 'EXCURSION_DURATION_UNDERCOUNT', 1, 1, 'Stored duration: 10 min; calculated duration: 40 min.')
+
+Total scenarios: 5
+Detected scenarios: 5
+Detection rate: 5/5

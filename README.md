@@ -1,98 +1,152 @@
-﻿# YottaFlex Cold Chain Monitoring System
+\# YottaFlex Cold Chain Monitoring System
 
 
 
-A Python and SQLite-based cold-chain monitoring application that tracks shipments, validates sensor readings, detects temperature and humidity excursions, and supports corrective actions.
+A Python and SQLite-based cold-chain monitoring system designed to track shipments, monitor sensor readings, detect temperature and humidity excursions, validate data quality, and maintain corrective-action records.
 
 
 
-## Features
+\## 1. Features
 
 
 
-- Shipment, product, container, and sensor records.
+\- Shipment, product, container, and sensor management.
 
-- Temperature and humidity monitoring.
+\- Product-specific temperature and humidity threshold policies.
 
-- Product-specific threshold policies.
+\- Five-minute interval sensor monitoring.
 
-- Route stops and operational events.
+\- Shipment-to-container assignment tracking.
 
-- Data-quality checks and excursion records.
+\- Temperature and humidity excursion detection.
 
-- Streamlit dashboard with Plotly charts.
+\- Excursion duration and severity classification.
 
-- Corrective-action tracking.
+\- Route stops and operational event records.
 
-- CSV exports.
+\- Data-quality validation and ground-truth scenarios.
 
+\- Corrective-action tracking.
 
+\- SQLite database integrity and foreign-key validation.
 
-## Technology Stack
+\- Streamlit dashboard with Plotly visualizations.
 
+\- CSV ground-truth export.
 
-
-- Python
-
-- SQLite
-
-- Pandas
-
-- NumPy
-
-- Streamlit
-
-- Plotly
-
-- Pytest
+\- Automated validation report generation.
 
 
 
-## Project Structure
+\## 2. Technology Stack
 
 
+
+| Technology | Purpose |
+
+|---|---|
+
+| Python | Application logic and data processing |
+
+| SQLite | Relational database |
+
+| Pandas | Data analysis |
+
+| NumPy | Synthetic data generation |
+
+| Streamlit | Interactive dashboard |
+
+| Plotly | Data visualization |
+
+| Pytest | Automated testing |
+
+
+
+\## 3. Project Structure
+
+
+
+```text
 
 yottaflex-cold-chain/
 
-&#x20;   data/
+│
 
-&#x20;       cold_chain.db
+├── data/
 
-&#x20;   src/
+│   └── cold\_chain.db
 
-&#x20;       align_readings.py
+│
 
-&#x20;       dashboard.py
+├── src/
 
-&#x20;       generate_data.py
+│   ├── align\_readings.py
 
-&#x20;       generate_operations.py
+│   ├── dashboard.py
 
-&#x20;       init_db.py
+│   ├── detect\_excursions.py
 
-&#x20;       main.py
+│   ├── generate\_data.py
 
-&#x20;       quality_scenarios.py
+│   ├── generate\_operations.py
 
-&#x20;       schema.sql
+│   ├── init\_db.py
 
-&#x20;       verify_db.py
+│   ├── main.py
 
-&#x20;   tests/
+│   ├── quality\_scenarios.py
 
-&#x20;       test_database.py
+│   ├── schema.sql
 
-&#x20;   reports/
+│   └── verify\_db.py
 
-&#x20;   .gitignore
+│
 
-&#x20;   README.md
+├── tests/
 
-&#x20;   requirements.txt
+│   └── test\_database.py
+
+│
+
+├── reports/
+
+│   ├── ground\_truth.csv
+
+│   └── validation\_report.txt
+
+│
+
+├── DATA\_DICTIONARY.md
+
+├── export\_ground\_truth.py
+
+├── generate\_validation\_report.py
+
+├── requirements.txt
+
+├── .gitignore
+
+└── README.md
+
+```
 
 
 
-## Setup
+\## 4. Installation and Setup
+
+
+
+Clone the repository:
+
+
+
+```bash
+
+git clone https://github.com/lakshmihub-tech/yottaflex-cold-chain.git
+
+cd yottaflex-cold-chain
+
+```
 
 
 
@@ -100,54 +154,221 @@ Install dependencies:
 
 
 
-&#x20;   pip install -r requirements.txt
+```bash
+
+pip install -r requirements.txt
+
+```
 
 
 
-## Run Dashboard
+\## 5. Run the Application
 
 
 
-&#x20;   streamlit run src/dashboard.py
+Start the Streamlit dashboard:
 
 
 
-## Verify Database
+```bash
+
+streamlit run src/dashboard.py
+
+```
 
 
 
-&#x20;   python src/verify_db.py
+\## 6. Database Verification
 
 
 
-## Run Tests
+Run database verification:
 
 
 
-&#x20;   python -m pytest tests/ -v
+```bash
+
+python src/verify\_db.py
+
+```
 
 
 
-## Validation
+This checks expected entity counts, foreign-key relationships, database integrity, and reading timestamp order.
 
 
 
-The project has previously passed five automated database tests, product verification, database integrity checks, and foreign-key checks.
+\## 7. Excursion Detection
 
 
 
-## Data Disclaimer
+Run the rule-based excursion detector:
 
 
 
-The database contains synthetic demonstration data. It is not intended for real-world medical or food-safety decisions.
+```bash
+
+python src/detect\_excursions.py
+
+```
 
 
 
-## Note
+The detector evaluates temperature and humidity readings against applicable product thresholds and records detected excursion episodes.
 
 
 
-Excursion detection and operational validation use software rules and data-quality checks. This project does not claim machine-learning prediction.
+\*\*Important:\*\* Run experiments against a test database. Preserve the original database.
 
+
+
+\## 8. Ground-Truth Export
+
+
+
+Generate the ground-truth CSV:
+
+
+
+```bash
+
+python export\_ground\_truth.py
+
+```
+
+
+
+Output:
+
+
+
+```text
+
+reports/ground\_truth.csv
+
+```
+
+
+
+\## 9. Validation Report
+
+
+
+Generate the validation report:
+
+
+
+```bash
+
+python generate\_validation\_report.py
+
+```
+
+
+
+Output:
+
+
+
+```text
+
+reports/validation\_report.txt
+
+```
+
+
+
+\## 10. Run Automated Tests
+
+
+
+Execute the test suite:
+
+
+
+```bash
+
+python -m pytest tests/ -v
+
+```
+
+
+
+The current test suite contains five database tests covering database existence, product count, container count, shipment count, and valid shipment-product relationships.
+
+
+
+\*\*Latest recorded test result: 5 passed.\*\*
+
+
+
+\## 11. Data Quality Scenarios
+
+
+
+The project includes five documented negative scenarios:
+
+
+
+1\. Physically impossible sensor reading.
+
+2\. Missing sensor reading interval.
+
+3\. Delivery before departure.
+
+4\. Incorrect product threshold application.
+
+5\. Excursion duration undercounting.
+
+
+
+These scenarios are represented in the data-quality and ground-truth records.
+
+
+
+\## 12. Data Dictionary
+
+
+
+Refer to `DATA\_DICTIONARY.md` for entity descriptions, field definitions, data types, relationships, and validation details.
+
+
+
+\## 13. Validation Summary
+
+
+
+Previously recorded validation results:
+
+
+
+\- Five automated database tests passed.
+
+\- SQLite integrity check passed.
+
+\- Foreign-key validation reported zero violations.
+
+\- Product-specific threshold verification passed.
+
+\- Synthetic excursion tests detected brief and prolonged temperature excursions.
+
+
+
+\## 14. Data Disclaimer
+
+
+
+All database records are synthetic demonstration data. This application is intended for software development and demonstration purposes and must not be used as the sole basis for real-world pharmaceutical, medical, or food-safety decisions.
+
+
+
+\## 15. Limitations
+
+
+
+\- Excursion detection is rule-based, not machine-learning prediction.
+
+\- Real-world notification delivery is not claimed as implemented.
+
+\- Synthetic test scenarios do not replace validation against real operational data.
 

@@ -418,7 +418,7 @@ def main():
         insert_containers(connection)
         insert_shipments(connection)
         insert_sensors(connection)
-        insert_sensor_readings(connection)
+        # Sensor readings are generated after shipment-container assignments.
 
         verify_database(connection)
 
